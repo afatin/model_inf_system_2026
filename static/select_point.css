@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+.control-panel {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(8px);
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    font-family: 'Inter', sans-serif;
+    width: 280px;
+    border: 1px solid rgba(255,255,255,0.3);
+    transition: all 0.2s ease;
+}
+.control-panel:hover {
+    box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+}
+.panel-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #1f2937;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 8px;
+}
+.mode-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.mode-btn {
+    flex: 1;
+    padding: 8px 0;
+    border-radius: 40px;
+    border: none;
+    background: #f3f4f6;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+.mode-btn.active {
+    background: #3b82f6;
+    color: white;
+    box-shadow: 0 2px 8px rgba(59,130,246,0.3);
+}
+.mode-btn:not(.active):hover {
+    background: #e5e7eb;
+}
+.info-card {
+    background: #f9fafb;
+    border-radius: 16px;
+    padding: 12px;
+    margin: 15px 0;
+}
+.coord-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 8px;
+    color: #4b5563;
+}
+.coord-value {
+    font-family: 'Monaco', monospace;
+    font-weight: 500;
+    color: #111827;
+}
+.elevation-row {
+    background: #e0f2fe;
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+    color: #0369a1;
+}
+#submitBtn {
+    width: 100%;
+    padding: 10px;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 40px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 10px;
+}
+#submitBtn:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+#submitBtn:not(:disabled):hover {
+    background: #059669;
+    transform: scale(1.02);
+}
+.status-badge {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 40px;
+    font-family: 'Inter', monospace;
+    font-size: 13px;
+    z-index: 9999;
+    pointer-events: none;
+    letter-spacing: 0.5px;
+}
