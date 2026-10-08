@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Настройка анализа</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Специфичные для analyze.html стили (можно оставить здесь или перенести в style.css) */
+        .mode-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f3f4f6;
+            border-radius: 12px;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .mode-btn.active {
+            background: #3b82f6;
+            color: white;
+        }
+        .mode-btn:not(.active) {
+            background: #e5e7eb;
+            color: #4b5563;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #374151;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .info-box {
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #1e40af;
+        }
+        .coords-info {
+            background: #fef3c7;
+            border-left-color: #f59e0b;
+            color: #92400e;
+        }
+        button.primary {
+            width: 100%;
+            padding: 12px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+        button.primary:hover {
+            background: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            margin-top: 15px;
+            background: #f3f4f6;
+            border-radius: 8px;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #dc2626;
+        }
+        .stats-preview {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+        .stats-preview.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Настройка анализа затопления</h1>
+        <div class="info-box coords-info">
+            <strong>Выбранная точка:</strong><br>
+            Широта: <span id="latDisplay">—</span><br>
+            Долгота: <span id="lonDisplay">—</span>
+        </div>
+        <div id="levelInputs" class="input-group">
+            <label>Уровень воды (м):</label>
+            <input type="number" id="water_level" step="0.5" placeholder="Введите уровень воды">
+            <div class="info-box" style="margin-top: 8px;">️ Вода будет поднята до указанного уровня</div>
+        </div>
+        <div id="volumeInputs" class="input-group" style="display: none;">
+            <label>Объём воды (тыс. м³):</label>
+            <input type="number" id="water_volume" step="100" placeholder="Введите объём в тыс. м³">
+            <div class="info-box" style="margin-top: 8px;">️ Алгоритм сам найдёт уровень для заданного объёма</div>
+        </div>
+        <button id="analyzeBtn" class="primary"> Старт алгоритма</button>
+        <div id="loading" style="display: none;">
+            <div class="loading">
+                <div class="spinner"></div>
+                <div>Выполняется анализ затопления...</div>
+            </div>
+        </div>
+        <div id="error" class="error" style="display: none;"></div>
+        <div class="success-message" id="successMessage"></div>
+    </div>
+    <script>
+        const session_id = localStorage.getItem('session_id');
+        if (!session_id) {
+            alert('Сессия не найдена. Загрузите файл сначала.');
+            window.location.href = '/';
+        }
+
+        let currentMode = 'level';
+        let isAnalyzing = false;
+
+        async function loadStartPoint() {
+            try {
+                const response = await fetch(`/get_start_point?session_id=${session_id}`);
+                const data = await response.json();
+                if (data.lat && data.lon) {
+                    document.getElementById('latDisplay').innerHTML = `${data.lat.toFixed(6)}°`;
+                    document.getElementById('lonDisplay').innerHTML = `${data.lon.toFixed(6)}°`;
+                    window.startLat = data.lat;
+                    window.startLon = data.lon;
+                } else {
+                    alert('Точка старта не выбрана. Вернитесь на карту.');
+                    window.location.href = '/';
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Ошибка загрузки точки старта');
+            }
+        }
+
+        document.getElementById('analyzeBtn').onclick = async () => {
+            if (isAnalyzing) {
+                return;
+            }
+
+            const lat = window.startLat;
+            const lon = window.startLon;
+            let requestBody = { session_id, lat, lon, mode: currentMode };
+
+            const water_level = parseFloat(document.getElementById('water_level').value);
+                if (isNaN(water_level)) {
+                    alert('Введите уровень воды');
+                    return;
+                }
+                requestBody.water_level = water_level;
+
+
+            isAnalyzing = true;
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            analyzeBtn.disabled = true;
+            analyzeBtn.textContent = 'Выполняется анализ...';
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('successMessage').classList.remove('show');
+
+            try {
+                const response = await fetch('/run_analysis', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                document.getElementById('successMessage').classList.add('show');
+
+                setTimeout(() => {
+                    window.location.href = data.result_map_url;
+                }, 300);
+
+            } catch (err) {
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').innerText = `Ошибка: ${err.message}`;
+                console.error(err);
+
+                isAnalyzing = false;
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = 'Запустить анализ';
+                document.getElementById('loading').style.display = 'none';
+            }
+        };
+
+        loadStartPoint();
+    </script>
+</body>
+</html>

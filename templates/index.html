@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Анализ затопления</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Анализ зон затопления</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="tiff_file">Загрузите TIFF файл (ЦМР):</label>
+                <input type="file" id="tiff_file" name="tiff_file" accept=".tif,.tiff" required>
+            </div>
+            <button type="submit">Загрузить</button>
+        </form>
+        <div id="loading" style="display:none;">Загрузка и обработка...</div>
+        <div id="error" style="color:red;"></div>
+    </div>
+    <script>
+        document.getElementById('uploadForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('tiff_file', document.getElementById('tiff_file').files[0]);
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').innerText = '';
+            try {
+                const response = await fetch('/upload', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+                localStorage.setItem('session_id', data.session_id);
+                window.location.href = data.map_url;
+            } catch (err) {
+                document.getElementById('error').innerText = err.message;
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        };
+    </script>
+</body>
+</html>
