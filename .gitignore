@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+venv2/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project specific
+uploads/
+results/
+*.tif
+*.tiff
+*.png
+flood_overlay_*.png
+select_point_*.html
+result_map_*.html
+
+# Flask
+instance/
+.webassets-cache
+
+# Logs
+*.log
